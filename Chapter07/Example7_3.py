@@ -2,6 +2,8 @@
 Created on May 27, 2019
 
 @author: AA
+
+Decorator enhanced strategy pattern
 '''
 from collections import namedtuple
 
@@ -38,27 +40,34 @@ class Order: #The content
         fmt = '<Order Total : {:.2f}   due : {:.2f}'
         return fmt.format(self.total(), self.due())
 
-def fidelity_promo(order): #First functional strategy
+promos = []
+
+def promotion(promo_func):
+    promos.append(promo_func)
+    return promo_func
+
+@promotion
+def fidelity(order): #First functional strategy
         return order.total() * 0.5 if order.customer.fidelity >= 1000 else 0
     
-def bulk_item_promo(order): #Second functional strategy
+@promotion    
+def bulk_item(order): #Second functional strategy
         discount = 0
         for item in order.cart:
             if item.quantity >= 20:
                 discount += item.total() * 0.1
         return discount
-    
-def large_order_promo(order): #Third functional strategy
+
+@promotion    
+def large_order(order): #Third functional strategy
         distinct_items = {items.product for items in order.cart}
         if len(distinct_items) >= 10:
             return order.total() * 0.7
         return 0
     
-promo_List = [globals()[name] for name in globals() if name.endswith('_promo') and name != 'best_promo']
-
 def best_promo(order):
-    return max(promo(order) for promo in promo_List)
-    
+    return max(promo(order) for promo in promos)
+
 if __name__ == '__main__':
     joe = Customer('Jhon doe', 0)
     ann = Customer('Ann Smith', 1100)
